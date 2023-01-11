@@ -6,107 +6,97 @@
  * @flow strict-local
  */
 
-import React from 'react';
+import React, {useEffect,useState} from 'react';
 import type {Node} from 'react';
-import {
-  SafeAreaView,
-  ScrollView,
-  StatusBar,
-  StyleSheet,
-  Text,
-  useColorScheme,
-  View,
-} from 'react-native';
-
-import {
-  Colors,
-  DebugInstructions,
-  Header,
-  LearnMoreLinks,
-  ReloadInstructions,
-} from 'react-native/Libraries/NewAppScreen';
-
-const Section = ({children, title}): Node => {
-  const isDarkMode = useColorScheme() === 'dark';
-  return (
-    <View style={styles.sectionContainer}>
-      <Text
-        style={[
-          styles.sectionTitle,
-          {
-            color: isDarkMode ? Colors.white : Colors.black,
-          },
-        ]}>
-        {title}
-      </Text>
-      <Text
-        style={[
-          styles.sectionDescription,
-          {
-            color: isDarkMode ? Colors.light : Colors.dark,
-          },
-        ]}>
-        {children}
-      </Text>
-    </View>
-  );
-};
+import ShuftiPro from "react-native-shuftipro-kyc";
 
 const App: () => Node = () => {
-  const isDarkMode = useColorScheme() === 'dark';
 
-  const backgroundStyle = {
-    backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
+  const [shuftiProAT, setShuftiProAT] = useState();
+
+  useEffect(() => {
+    var token = btoa(
+      "CLIENTID:SECRETKEY",
+    ); //BASIC AUTH TOKEN
+    //Dispatch request via fetch API or with whatever else which best suits for you
+    fetch("https://api.shuftipro.com/get/access/token", {
+      method: "post",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+        Authorization: "Basic " + token,
+      },
+    })
+      .then(function (response) {
+        return response.json().then(responseJson => {
+          if (responseJson) {
+            // if (callback) {
+            //   callback(responseJson?.access_token);
+            // }
+            setShuftiProAT(responseJson?.access_token);
+          }
+        });
+      })
+      .then(function (data) {
+        return data;
+      });
+  }, []);
+
+  const verificationObj = {
+    reference: Date.now(),
+    country: "GB",
+    language: "EN",
+    email: "firdous.ali.tp@gmail.com",
+    callback_url: "http://www.example.com",
+    redirect_url: "http://www.example.com",
+    show_consent: 1,
+    show_results: 1,
+    show_privacy_policy: 1,
+    open_webview: false,
+    face: true,
+    document: {
+      supported_types: ["id_card"],
+      name: {
+        first_name: "",
+        last_name: "",
+        middle_name: "",
+      },
+      dob: "",
+      document_number: "",
+      expiry_date: "",
+      issue_date: "",
+      fetch_enhanced_data: "",
+      gender: "",
+      backside_proof_required: "0",
+    },
+    background_checks: {},
+    phone: {},
   };
 
   return (
-    <SafeAreaView style={backgroundStyle}>
-      <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
-      <ScrollView
-        contentInsetAdjustmentBehavior="automatic"
-        style={backgroundStyle}>
-        <Header />
-        <View
-          style={{
-            backgroundColor: isDarkMode ? Colors.black : Colors.white,
-          }}>
-          <Section title="Step One">
-            Edit <Text style={styles.highlight}>App.js</Text> to change this
-            screen and then come back to see your edits.
-          </Section>
-          <Section title="See Your Changes">
-            <ReloadInstructions />
-          </Section>
-          <Section title="Debug">
-            <DebugInstructions />
-          </Section>
-          <Section title="Learn More">
-            Read the docs to discover what to do next:
-          </Section>
-          <LearnMoreLinks />
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+    <ShuftiPro
+      requestPayload={verificationObj}
+      verificationMode={"image"}
+      async={false}
+      asyncResponseCallback={response => {
+        console.log(shuftiProAT);
+        console.log("Response : ", response);
+      }}
+      onResponseOkayButton={() => {
+        console.log("Okay Btn");
+      }}
+      cancelBtn={() => {
+        console.log("Cancel Btn");
+      }}
+      accessToken={shuftiProAT}
+      // basicAuth={{
+      //   client_id:
+      //     "CLIENTID",
+      //   secret_key:
+      //     "SECRETKEY",
+      // }}
+    />
   );
 };
-
-const styles = StyleSheet.create({
-  sectionContainer: {
-    marginTop: 32,
-    paddingHorizontal: 24,
-  },
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: '600',
-  },
-  sectionDescription: {
-    marginTop: 8,
-    fontSize: 18,
-    fontWeight: '400',
-  },
-  highlight: {
-    fontWeight: '700',
-  },
-});
 
 export default App;
